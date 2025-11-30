@@ -1,0 +1,6 @@
+{
+  "name": "restored_solution",
+  "allocations": {"AAPL": 0.22, "MSFT": 0.13, "GOOG": 0.24, "AMZN": 0.11, "BND": 0.3},
+  "expected_return": 0.125,
+  "risk": 0.19
+}

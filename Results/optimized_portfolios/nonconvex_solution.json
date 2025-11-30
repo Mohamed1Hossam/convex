@@ -1,0 +1,6 @@
+{
+  "name": "nonconvex_solution",
+  "allocations": {"AAPL": 0.4, "MSFT": 0.0, "GOOG": 0.4, "AMZN": 0.0, "BND": 0.2},
+  "expected_return": 0.14,
+  "risk": 0.25
+}
