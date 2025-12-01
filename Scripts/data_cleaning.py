@@ -1,27 +1,35 @@
-"""data_cleaning.py
-Utilities to load and clean the raw stock dataset.
-"""
-from pathlib import Path
+# Scripts/data_cleaning.py
+import os
 import pandas as pd
 
-def load_raw(path):
-    path = Path(path)
-    return pd.read_csv(path)
+REQUIRED_COLS = ["date", "Name", "open", "high", "low", "close", "volume"]
 
-def clean_prices(df):
-    # Basic cleaning placeholder: drop NaNs and convert dates
-    df = df.copy()
-    if 'date' in df.columns:
-        df['date'] = pd.to_datetime(df['date'])
-    df = df.dropna()
+def clean_prices(df: pd.DataFrame) -> pd.DataFrame:
+    cols = [c for c in REQUIRED_COLS if c in df.columns]
+    df = df[cols].copy()
+
+    # Types
+    df["date"] = pd.to_datetime(df["date"])
+    df["Name"] = df["Name"].astype(str)
+
+    # Basic cleaning
+    df = df.drop_duplicates(subset=["Name", "date"])
+    df = df.dropna(subset=["open", "high", "low", "close", "volume"])
+
+    # Remove non-positive values
+    for c in ["open", "high", "low", "close", "volume"]:
+        df = df[df[c] > 0]
+
+    df = df.sort_values(["Name", "date"])
     return df
 
-def save_clean(df, out_path):
-    Path(out_path).parent.mkdir(parents=True, exist_ok=True)
-    df.to_csv(out_path, index=False)
+def main():
+    os.makedirs("../Results/processed", exist_ok=True)
+    src = "../Data/all_stocks_5yr.csv"
+    df = pd.read_csv(src)
+    df = clean_prices(df)
+    df.to_csv("../Results/processed/clean_prices.csv", index=False)
+    print("Saved cleaned prices to ../Results/processed/clean_prices.csv")
 
 if __name__ == "__main__":
-    raw = load_raw('../Dataset/all_stocks_5yr.csv')
-    clean = clean_prices(raw)
-    save_clean(clean, '../Dataset/cleaned_stocks_5yr.csv')
-    print('Saved cleaned dataset to ../Dataset/cleaned_stocks_5yr.csv')
+    main()
