@@ -5,9 +5,9 @@ import json
 import os
 
 def load_data():
-    mu = pd.read_json("Results/processed/mean_returns.json", typ="series")
-    cov = pd.read_csv("Results/processed/cov_matrix.csv", index_col=0)
-    tickers = pd.read_csv("Results/processed/selected_tickers.csv", header=None)[0].tolist()
+    mu = pd.read_json("../Results/processed/mean_returns.json", typ="series")
+    cov = pd.read_csv("../Results/processed/cov_matrix.csv", index_col=0)
+    tickers = pd.read_csv("../Results/processed/selected_tickers.csv", header=None)[0].tolist()
 
     return mu, cov, tickers
 
@@ -37,13 +37,13 @@ def optimize_portfolio(mu, cov, tickers, lam=10, max_alloc=0.3):
     return x.value, problem.value
 
 def save_solution(tickers, weights, objective_value):
-    os.makedirs("Results/optimized_portfolios", exist_ok=True)
+    os.makedirs("../Results/optimized_portfolios", exist_ok=True)
     result = {
         "tickers": tickers,
         "weights": weights.tolist(),
         "objective_value": float(objective_value)
     }
-    with open("Results/optimized_portfolios/convex_solution.json", "w") as f:
+    with open("../Results/optimized_portfolios/convex_solution.json", "w") as f:
         json.dump(result, f, indent=4)
 
 if __name__ == "__main__":
@@ -54,4 +54,4 @@ if __name__ == "__main__":
     save_solution(tickers, weights, obj_val)
 
     print("Convex portfolio optimization complete.")
-    print("Output saved to Results/optimized_portfolios/convex_solution.json")
+    print("Output saved to ../Results/optimized_portfolios/convex_solution.json")
