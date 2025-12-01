@@ -23,7 +23,7 @@ def compute_mu_and_cov(df):
 
 def save_outputs(mu, cov, tickers):
     """Save processed results into Results/processed/"""
-    out_dir = "../Results/processed"
+    out_dir = "Results/processed"
     os.makedirs(out_dir, exist_ok=True)
 
     # Save mean returns
@@ -37,7 +37,7 @@ def save_outputs(mu, cov, tickers):
                               index=False, header=False)
 
 if __name__ == "__main__":
-    data_path = "../Data/all_stocks_5yr.csv"
+    data_path = "Dataset/all_stocks_5yr.csv"
     raw = pd.read_csv(data_path)
     raw["date"] = pd.to_datetime(raw["date"])
 

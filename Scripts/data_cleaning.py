@@ -24,12 +24,12 @@ def clean_prices(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 def main():
-    os.makedirs("../Results/processed", exist_ok=True)
-    src = "../Data/all_stocks_5yr.csv"
+    os.makedirs("Results/processed", exist_ok=True)
+    src = "Dataset/all_stocks_5yr.csv"
     df = pd.read_csv(src)
     df = clean_prices(df)
-    df.to_csv("../Results/processed/clean_prices.csv", index=False)
-    print("Saved cleaned prices to ../Results/processed/clean_prices.csv")
+    df.to_csv("Results/processed/clean_prices.csv", index=False)
+    print("Saved cleaned prices to Results/processed/clean_prices.csv")
 
 if __name__ == "__main__":
     main()
