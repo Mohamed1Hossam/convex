@@ -20,8 +20,7 @@ def compute_mu_and_cov(df):
     return mu, cov, pivot.columns.tolist()
 
 def save_outputs(mu, cov, tickers):
-    """Save processed results into ../Results/processed/"""
-
+    """Save processed results into Results/processed/"""
     os.makedirs("../Results/processed", exist_ok=True)
 
     # Save mean returns
@@ -46,4 +45,4 @@ if __name__ == "__main__":
     # Save results for other scripts
     save_outputs(mu, cov, tickers)
 
-    print("✔ Daily returns, mean vector μ, and covariance Σ saved in ../Results/processed/")
+    print("Daily returns, mean vector , and covariance saved in Results/processed/")
