@@ -1,6 +1,0 @@
-{
-  "name": "convex_solution",
-  "allocations": {"AAPL": 0.2, "MSFT": 0.15, "GOOG": 0.25, "AMZN": 0.1, "BND": 0.3},
-  "expected_return": 0.12,
-  "risk": 0.18
-}
