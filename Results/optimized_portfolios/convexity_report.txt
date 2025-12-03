@@ -1,0 +1,43 @@
+======================================================================
+CONVEX PORTFOLIO OPTIMIZATION - DETAILED REPORT
+======================================================================
+
+1. PROBLEM FORMULATION
+----------------------------------------------------------------------
+Objective: minimize f(x) = x^T Σx - λμ^T x
+
+2. CONVEXITY ANALYSIS
+----------------------------------------------------------------------
+Matrix dimension: (467, 467)
+Minimum eigenvalue: 5.295044e-06
+Matrix PSD: True
+Objective curvature: CONVEX
+DCP compliant: True
+
+2.1 MATHEMATICAL JUSTIFICATION OF CONVEXITY
+----------------------------------------------------------------------
+The objective function is composed of two parts:
+
+1) Quadratic risk term: x^T Σ x
+   • A quadratic form x^T Σ x is convex if and only if Σ is positive semidefinite (PSD).
+   • From the eigenvalue analysis, the minimum eigenvalue of Σ is >= 0, confirming PSD.
+   • Therefore, the risk term is convex.
+
+2) Linear return term: -λ μ^T x
+   • Linear (affine) functions are both convex and concave.
+   • Subtracting a linear term does not change convexity.
+
+Since a convex function plus an affine function is still convex, the total objective:
+        f(x) = x^T Σ x - λ μ^T x
+is convex.
+
+The constraints (sum(x)=1, x>=0, x<=max_alloc) are linear, and linear constraints preserve convexity.
+Therefore, the entire optimization problem is convex.
+
+3. OPTIMIZATION RESULTS
+----------------------------------------------------------------------
+Status: optimal
+Objective value: -0.021383
+Portfolio return: 0.2176%
+Portfolio risk: 1.9382%
+Sharpe ratio: 0.1123
