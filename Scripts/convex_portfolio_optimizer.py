@@ -8,7 +8,7 @@ import cvxpy as cp
 def load_data():
     mu = pd.read_json("Results/processed/mean_returns.json", typ="series")
     cov = pd.read_csv("Results/processed/cov_matrix.csv", index_col=0)
-    tickers = pd.read_csv("Results/processed/selected_tickers.csv", header=None)[0].tolist()
+    tickers = pd.read_csv("Results/processed/tickers.txt", header=None)[0].tolist()
     return mu, cov, tickers
 
 def optimize_portfolio(mu, cov, tickers, lam=10, max_alloc=0.3):
