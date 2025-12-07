@@ -2,7 +2,7 @@
 Methods to restore or approximate convexity for nonconvex solutions.
 """
 import numpy as np
-from convex_portfolio_optimizer import optimize_convex
+from convex_portfolio_optimizer import optimize_portfolio
 
 def project_to_simplex(weights):
     # simple projection onto probability simplex
