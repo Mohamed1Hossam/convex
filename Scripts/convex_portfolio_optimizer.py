@@ -10,7 +10,6 @@ def load_data():
     tickers = pd.read_csv("Results/processed/tickers.txt", header=None)[0].tolist()
     return mu, cov, tickers
 
-
 def analyze_convexity(Sigma, mu_vec, lam):
     eigenvalues = np.linalg.eigvalsh(Sigma)
     min_eigenvalue = float(np.min(eigenvalues))
@@ -26,7 +25,6 @@ def analyze_convexity(Sigma, mu_vec, lam):
         "objective_curvature": test_obj.curvature,
         "is_dcp": test_obj.is_dcp(),
     }
-
 
 def optimize_portfolio(mu, cov, tickers, lam=10, max_alloc=0.3):
     mu_vec = mu.loc[tickers].values
@@ -57,7 +55,6 @@ def optimize_portfolio(mu, cov, tickers, lam=10, max_alloc=0.3):
         "sharpe_ratio": sharpe_ratio,
         "convexity": convexity,
     }
-
 
 def write_report(problem_info, objective_value, file_path):
     with open(file_path, "w", encoding="utf-8") as f:
@@ -106,7 +103,6 @@ def write_report(problem_info, objective_value, file_path):
         f.write(f"Portfolio return: {problem_info['portfolio_return']:.4%}\n")
         f.write(f"Portfolio risk: {problem_info['portfolio_risk']:.4%}\n")
         f.write(f"Sharpe ratio: {problem_info['sharpe_ratio']:.4f}\n")
-
 
 if __name__ == "__main__":
     mu, cov, tickers = load_data()

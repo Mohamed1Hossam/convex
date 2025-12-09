@@ -1,19 +1,9 @@
-# Scripts/compute_returns.py
 import os
 import pandas as pd
 import numpy as np
 from data_cleaning import clean_prices
 
 def compute_daily_returns(df: pd.DataFrame) -> pd.DataFrame:
-    """
-    Compute daily percentage returns for each ticker.
-    
-    Args:
-        df: DataFrame with columns ['date', 'ticker', 'close', ...]
-        
-    Returns:
-        DataFrame with additional 'return' column containing daily returns
-    """
     # Determine the ticker column name (handle both 'ticker' and 'Name')
     ticker_col = 'ticker' if 'ticker' in df.columns else 'Name'
     
@@ -29,18 +19,6 @@ def compute_daily_returns(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 def compute_mu_and_cov(df: pd.DataFrame) -> tuple:
-    """
-    Compute mean returns vector μ and covariance matrix Σ.
-    
-    Args:
-        df: DataFrame with columns ['date', 'ticker'/'Name', 'return']
-        
-    Returns:
-        tuple: (mu, cov, tickers)
-            - mu: numpy array of mean returns
-            - cov: numpy array covariance matrix
-            - tickers: list of ticker symbols
-    """
     # Determine the ticker column name
     ticker_col = 'ticker' if 'ticker' in df.columns else 'Name'
     
@@ -62,15 +40,6 @@ def compute_mu_and_cov(df: pd.DataFrame) -> tuple:
     return mu, cov, tickers
 
 def save_outputs(mu: np.ndarray, cov: np.ndarray, tickers: list, out_dir: str = "Results/processed") -> None:
-    """
-    Save processed results into Results/processed/.
-    
-    Args:
-        mu: Mean returns vector (numpy array)
-        cov: Covariance matrix (numpy array)
-        tickers: List of ticker symbols
-        out_dir: Output directory path
-    """
     os.makedirs(out_dir, exist_ok=True)
     
     # Save mean returns as JSON
@@ -81,7 +50,7 @@ def save_outputs(mu: np.ndarray, cov: np.ndarray, tickers: list, out_dir: str = 
         json.dump(mu_dict, f, indent=2)
     print(f"[SUCCESS] Saved mean returns to {mu_json_path}")
     
-    # Save covariance matrix as CSV with ticker labels (human-readable)
+    # Save covariance matrix as CSV with ticker labels
     cov_csv_path = os.path.join(out_dir, "cov_matrix.csv")
     pd.DataFrame(cov, index=tickers, columns=tickers).to_csv(cov_csv_path)
     print(f"[SUCCESS] Saved covariance matrix to {cov_csv_path}")
@@ -94,15 +63,6 @@ def save_outputs(mu: np.ndarray, cov: np.ndarray, tickers: list, out_dir: str = 
     print(f"[SUCCESS] Saved {len(tickers)} tickers to {tickers_path}")
 
 def load_outputs(input_dir: str = "Results/processed") -> tuple:
-    """
-    Load previously saved μ, Σ, and tickers from saved files.
-    
-    Args:
-        input_dir: Directory containing saved files
-        
-    Returns:
-        tuple: (mu, cov, tickers)
-    """
     import json
     
     # Load mean returns from JSON

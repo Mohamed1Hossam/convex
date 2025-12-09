@@ -1,14 +1,9 @@
-# Scripts/data_cleaning.py
 import os
 import pandas as pd
 
 REQUIRED_COLS = ["date", "Name", "open", "high", "low", "close", "volume"]
 
 def audit_data_quality(df: pd.DataFrame, verbose: bool = True) -> dict:
-    """
-    Perform comprehensive data quality checks.
-    Returns a dictionary with audit results.
-    """
     results = {}
     
     # 1. Check for Low > High (The "Impossible" Price)
@@ -53,16 +48,6 @@ def audit_data_quality(df: pd.DataFrame, verbose: bool = True) -> dict:
     return results
 
 def clean_prices(df: pd.DataFrame, verbose: bool = True) -> pd.DataFrame:
-    """
-    Enhanced cleaning function with comprehensive validation.
-    
-    Args:
-        df: Raw DataFrame with stock price data
-        verbose: Whether to print detailed cleaning reports
-        
-    Returns:
-        Cleaned DataFrame
-    """
     if verbose:
         print(f"Initial rows: {len(df)}")
     
