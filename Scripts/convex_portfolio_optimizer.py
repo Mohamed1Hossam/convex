@@ -75,9 +75,7 @@ def plot_convex_hull(data_df, plot_path="Results/plots/dataset_convex_hull.png")
 
 
 def plot_objective_function(Sigma, mu_vec, lam, plot_path="Results/plots/objective_function_convexity.png"):
-    """
-    Plots a 2D slice of the objective function to visually inspect its convexity.
-    """
+
     n = len(mu_vec)
     if n < 2:
         print("[SKIP] Cannot plot objective function: Need at least 2 assets.")
@@ -159,67 +157,7 @@ def optimize_portfolio(mu, cov, tickers, lam=10, max_alloc=0.3):
         "convexity": convexity,
     }
 
-# ---------------------- REPORT WRITING ----------------------
-def write_report(problem_info, objective_value, file_path):
-    with open(file_path, "w", encoding="utf-8") as f:
-        f.write("=" * 70 + "\n")
-        f.write("CONVEX PORTFOLIO OPTIMIZATION - DETAILED REPORT\n")
-        f.write("=" * 70 + "\n\n")
-
-        f.write("1. PROBLEM FORMULATION (CVXPY)\n")
-        f.write("-" * 70 + "\n")
-        f.write("Objective: minimize f(x) = x^T Σx - λμ^T x\n")
-        f.write("Constraints:\n")
-        f.write("  - Sum(x_i) = 1 (Full Investment)\n")
-        f.write("  - x_i >= 0 (No Short Selling)\n")
-        f.write("  - x_i <= Max Allocation (Concentration Limit)\n\n")
-
-        cv = problem_info["convexity"]
-        f.write("2. CONVEXITY ANALYSIS (Objective Function)\n")
-        f.write("-" * 70 + "\n")
-        
-        # New: Second derivative check (Hessian)
-        f.write("2.1 Second Derivative (Hessian) Check:\n")
-        f.write(f"Hessian = 2 * Covariance Matrix (Σ)\n")
-        f.write(f"Minimum eigenvalue of Σ: {cv['min_eigenvalue']:.6e}\n")
-        f.write(f"Is Σ Positive Semi-Definite (PSD)?: {cv['matrix_psd']}\n\n")
-        
-        # New: CVXPY DCP check
-        f.write("2.2 CVXPY (DCP) Rules Check:\n")
-        f.write(f"Objective curvature: {cv['objective_curvature']}\n")
-        f.write(f"DCP compliant: {cv['is_dcp']}\n\n")
-        
-        # Retain Mathematical Justification
-        f.write("2.3 MATHEMATICAL JUSTIFICATION\n")
-        f.write("-" * 70 + "\n")
-        f.write(
-            "The objective function is composed of two parts:\n\n"
-            "1) Quadratic risk term: x^T Σ x\n"
-            "   • A quadratic form x^T Σ x is convex if and only if Σ is positive semi-definite (PSD).\n"
-            f"   • From the eigenvalue analysis, the minimum eigenvalue of Σ is {'non-negative' if cv['matrix_psd'] else 'negative'}, confirming PSD.\n"
-            "   • Therefore, the risk term is convex.\n\n"
-            "2) Linear return term: -λ μ^T x\n"
-            "   • Linear (affine) functions are both convex and concave.\n"
-            "   • Minimizing a convex function (Risk) plus an affine function (Negative Return) is a convex problem.\n\n"
-            "The constraints are all linear, which defines a convex feasible set.\n"
-            "Thus, the entire optimization problem is convex.\n\n"
-        )
-
-        f.write("3. OPTIMIZATION RESULTS\n")
-        f.write("-" * 70 + "\n")
-        f.write(f"Status: {problem_info['status']}\n")
-        f.write(f"Objective value: {objective_value:.6f}\n")
-        f.write(f"Portfolio return: {problem_info['portfolio_return']:.4%}\n")
-        f.write(f"Portfolio risk: {problem_info['portfolio_risk']:.4%}\n")
-        f.write(f"Sharpe ratio: {problem_info['sharpe_ratio']:.4f}\n")
-
 # ---------------------- MAIN EXECUTION ----------------------
 if __name__ == "__main__":
     mu, cov, tickers = load_data()
     weights, obj_val, info = optimize_portfolio(mu, cov, tickers)
-
-    os.makedirs("Results/optimized_portfolios", exist_ok=True)
-    report_path = "Results/optimized_portfolios/convexity_report.txt"
-
-    write_report(info, obj_val, report_path)
-    print(f"\n[SUCCESS] Convex Optimization complete. Report saved to {report_path}")
