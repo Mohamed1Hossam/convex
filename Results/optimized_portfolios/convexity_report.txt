@@ -2,37 +2,40 @@
 CONVEX PORTFOLIO OPTIMIZATION - DETAILED REPORT
 ======================================================================
 
-1. PROBLEM FORMULATION
+1. PROBLEM FORMULATION (CVXPY)
 ----------------------------------------------------------------------
 Objective: minimize f(x) = x^T Σx - λμ^T x
+Constraints:
+  - Sum(x_i) = 1 (Full Investment)
+  - x_i >= 0 (No Short Selling)
+  - x_i <= Max Allocation (Concentration Limit)
 
-2. CONVEXITY ANALYSIS
+2. CONVEXITY ANALYSIS (Objective Function)
 ----------------------------------------------------------------------
-Matrix dimension: (467, 467)
-Minimum eigenvalue: 5.295044e-06
-Matrix PSD: True
+2.1 Second Derivative (Hessian) Check:
+Hessian = 2 * Covariance Matrix (Σ)
+Minimum eigenvalue of Σ: 5.295044e-06
+Is Σ Positive Semi-Definite (PSD)?: True
+
+2.2 CVXPY (DCP) Rules Check:
 Objective curvature: CONVEX
 DCP compliant: True
 
-2.1 MATHEMATICAL JUSTIFICATION OF CONVEXITY
+2.3 MATHEMATICAL JUSTIFICATION
 ----------------------------------------------------------------------
 The objective function is composed of two parts:
 
 1) Quadratic risk term: x^T Σ x
-   • A quadratic form x^T Σ x is convex if and only if Σ is positive semidefinite (PSD).
-   • From the eigenvalue analysis, the minimum eigenvalue of Σ is >= 0, confirming PSD.
+   • A quadratic form x^T Σ x is convex if and only if Σ is positive semi-definite (PSD).
+   • From the eigenvalue analysis, the minimum eigenvalue of Σ is non-negative, confirming PSD.
    • Therefore, the risk term is convex.
 
 2) Linear return term: -λ μ^T x
    • Linear (affine) functions are both convex and concave.
-   • Subtracting a linear term does not change convexity.
+   • Minimizing a convex function (Risk) plus an affine function (Negative Return) is a convex problem.
 
-Since a convex function plus an affine function is still convex, the total objective:
-        f(x) = x^T Σ x - λ μ^T x
-is convex.
-
-The constraints (sum(x)=1, x>=0, x<=max_alloc) are linear, and linear constraints preserve convexity.
-Therefore, the entire optimization problem is convex.
+The constraints are all linear, which defines a convex feasible set.
+Thus, the entire optimization problem is convex.
 
 3. OPTIMIZATION RESULTS
 ----------------------------------------------------------------------
