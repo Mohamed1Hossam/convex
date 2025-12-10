@@ -1,42 +1,58 @@
-"""
-restore_convex_portfolio_optimizer.py
-Restores convexity after using the non-convex portfolio model.
-This solves the original convex Markowitz model:
-
-    Minimize: x^T Σ x - λ μ^T x
-    Subject to: sum(x)=1, x>=0, x<=max_alloc
-
-This file is designed to work directly after running:
-    nonconvex_portfolio_optimizer.py
-"""
-
 import numpy as np
 import cvxpy as cp
 import pandas as pd
+import os
+import matplotlib.pyplot as plt
+from scipy.spatial import ConvexHull
 from convex_portfolio_optimizer import analyze_convexity, load_data
 
 
+# ---------------------- CONVEX HULL AND PLOTTING FUNCTION ----------------------
+
+def plot_convex_hull(mu, Sigma, tickers, plot_path="Results/plots/dataset_convex_hull_restored.png"):
+    # Risk is standard deviation (sqrt of diagonal of Covariance matrix)
+    risk = np.sqrt(np.diag(Sigma))
+    data_df = pd.DataFrame({'return': mu, 'risk': risk}, index=tickers)
+    points = data_df[['risk', 'return']].values
+
+    if points.shape[0] < 3:
+        print("[SKIP] Cannot plot convex hull: Need at least 3 assets.")
+        return
+
+    # Compute the convex hull
+    hull = ConvexHull(points)
+
+    plt.figure(figsize=(10, 8))
+    
+    # 1. Plot all data points (individual stocks)
+    plt.plot(points[:, 0], points[:, 1], 'o', markersize=4, label='Individual Stock Risk-Return')
+    
+    # 2. Plot the convex hull (boundary)
+    # Simplex indices define the edges of the hull
+    for simplex in hull.simplices:
+        plt.plot(points[simplex, 0], points[simplex, 1], 'r-', linewidth=2, alpha=0.7)
+    
+    plt.title('Restored Convexity Check: Asset Universe (Risk vs. Return)', fontsize=15)
+    plt.xlabel('Risk (Standard Deviation)', fontsize=12)
+    plt.ylabel('Return (Mean Daily Return)', fontsize=12)
+    plt.legend()
+    plt.grid(True, alpha=0.3)
+    plt.tight_layout()
+    
+    os.makedirs(os.path.dirname(plot_path), exist_ok=True)
+    plt.savefig(plot_path)
+    plt.close()
+    print(f"\n[SUCCESS] Convex Hull plot saved to {plot_path}")
+
+
+# ---------------------- RESTORE CONVEX OPTIMIZATION ----------------------
+
 def restore_convex(mu, cov, tickers, lam=10, max_alloc=0.3):
-    """
-    Restore convexity by removing non-convex terms
-    and solving the standard convex Markowitz portfolio model.
-
-    Parameters:
-        mu (Series): expected returns
-        cov (DataFrame): covariance matrix
-        tickers (list): list of tickers
-        lam (float): risk-return tradeoff parameter
-        max_alloc (float): maximum allocation per asset
-
-    Returns:
-        weights (np.array)
-        objective_value (float)
-        info (dict)
-    """
     n = len(tickers)
 
     # Extract arrays
     mu_vec = mu.loc[tickers].values
+    # Add small identity matrix for positive semi-definiteness
     Sigma = cov.loc[tickers, tickers].values + 1e-8 * np.eye(n)
 
     # Analyze convexity (for reporting)
@@ -78,9 +94,15 @@ def restore_convex(mu, cov, tickers, lam=10, max_alloc=0.3):
     return weights, problem.value, info
 
 
-# ---------------------- Testing Script ---------------------- #
 if __name__ == "__main__":
     mu, cov, tickers = load_data()
+    n = len(tickers)
+    
+    # Calculate Sigma for plotting and analysis
+    Sigma = cov.loc[tickers, tickers].values + 1e-8 * np.eye(n)
+
+    print("\nPlotting Restored Convex Dataset...")
+    plot_convex_hull(mu.loc[tickers].values, Sigma, tickers)
 
     weights, obj_val, info = restore_convex(mu, cov, tickers, lam=10, max_alloc=0.3)
 
