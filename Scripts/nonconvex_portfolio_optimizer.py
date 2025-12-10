@@ -5,7 +5,6 @@ import matplotlib.pyplot as plt
 from scipy.spatial import ConvexHull
 import sys
 
-# Attempt to import cvxpy, but define mocks if it fails (as seen in previous turns)
 try:
     import cvxpy as cp
 except ImportError:
@@ -24,16 +23,13 @@ except ImportError:
     cp = MockCVXPY()
 
 
-# ---------------------- MOCK STUBS for Dependencies ----------------------
 def load_data():
     """MOCK: Generates simple data for demonstration, with added noise to prevent collinearity errors."""
     N = 10
-    # Base returns are slightly increasing, with Gaussian noise added to ensure 2D non-collinearity for ConvexHull
     base_mu = np.linspace(0.0001, 0.0005, N)
     noise = np.random.normal(0, 0.00005, N) 
     mu = pd.Series(base_mu + noise, index=[f'ASSET_{i}' for i in range(N)])
     
-    # Create a positive semi-definite (PSD) covariance matrix
     A = np.random.rand(N, N) * 0.0001
     cov = pd.DataFrame(A @ A.T + np.diag(np.random.rand(N) * 0.00001))
     cov.columns = mu.index
@@ -45,7 +41,6 @@ def analyze_convexity(Sigma, mu_vec, lam):
     return {"is_dcp": True, "min_eigenvalue": np.min(np.linalg.eigvalsh(Sigma))}
 
 
-# ---------------------- NON-CONVEX TRANSFORMATION FUNCTION ----------------------
 def make_nonconvex(data, strength):
     """
     Apply a wavy distortion to destroy the convexity of the dataset points.
@@ -54,17 +49,13 @@ def make_nonconvex(data, strength):
     x = data[:, 0]
     y = data[:, 1]
 
-    # Sinusoidal distortion based on the index (x-axis)
-    # The strength scales the distortion
     distortion = strength * np.sin(4 * np.pi * x / len(x))
 
     y_distorted = y + distortion
-    # Ensure y values remain non-negative
     y_distorted = np.maximum(y_distorted, 0)
 
     return np.column_stack((x, y_distorted))
 
-# ---------------------- PLOTTING FUNCTION (Saves, does NOT show) ----------------------
 def plot_dataset_with_hull(data, title_suffix, filename, color):
     """
     Plot the dataset and its convex hull, and save the figure.
@@ -75,21 +66,16 @@ def plot_dataset_with_hull(data, title_suffix, filename, color):
 
     plt.figure(figsize=(10,6))
     
-    # Compute convex hull
     if data.shape[0] >= 3:
         hull = ConvexHull(data)
     else:
         print("[WARNING] Not enough points for Convex Hull.")
         hull = None
 
-    # Scatter data
     plt.scatter(data[:,0], data[:,1], color=color, label=f"Dataset {title_suffix}", s=80, alpha=0.7)
 
-    # Plot convex hull edges (boundary)
     if hull:
-        # Get the points forming the vertices of the hull in order
         hull_points = data[hull.vertices,:]
-        # Connect the last point to the first to close the loop
         hull_points = np.append(hull_points, [hull_points[0]], axis=0) 
         plt.plot(hull_points[:,0], hull_points[:,1], "r-", linewidth=2, alpha=0.5, label='Convex Hull Boundary')
 
@@ -102,11 +88,9 @@ def plot_dataset_with_hull(data, title_suffix, filename, color):
     plt.savefig(plot_path, dpi=300)
     print(f"\n[SUCCESS] Plot saved as: {plot_path}")
     
-    # Crucial step: Prevent the plot from being displayed
     plt.close()
 
 
-# ---------------------- USER'S PROVIDED OPTIMIZATION FUNCTION ----------------------
 def optimize_nonconvex(mu, cov, tickers, lam=10, max_alloc=0.3, k=None):
     """
     Optimize a portfolio with a non-convex objective.
@@ -116,19 +100,15 @@ def optimize_nonconvex(mu, cov, tickers, lam=10, max_alloc=0.3, k=None):
     mu_vec = mu.loc[tickers].values
     Sigma = cov.loc[tickers, tickers].values + 1e-8 * np.eye(n)
 
-    # Analyze convexity (for reference)
     convexity = analyze_convexity(Sigma, mu_vec, lam)
 
-    # ATTEMPT 1: Strict Mixed-Integer Formulation (The "Ideal" Model)
     try:
         x = cp.Variable(n)
         z = cp.Variable(n, boolean=True) if k is not None else None
 
-        # Objective: Risk - Return + Cubic Term (Non-Linear)
         cubic_penalty = 0.5 * cp.sum(cp.power(x, 3))
         objective = cp.Minimize(cp.quad_form(x, Sigma) - lam * (mu_vec @ x) + cubic_penalty)
 
-        # Constraints
         constraints = [cp.sum(x) == 1, x >= 0, x <= max_alloc]
 
         if k is not None:
@@ -149,13 +129,11 @@ def optimize_nonconvex(mu, cov, tickers, lam=10, max_alloc=0.3, k=None):
         weights = x.value
         status = problem.status
 
-    # ATTEMPT 2: Fallback Heuristic (If Solver fails)
     except (Exception) as e:
         print(f"\n[INFO] Optimization skipped/failed ({e}). Using simple placeholder weights.")
         weights = np.ones(n) / n 
         status = "Mocked/Fallback"
 
-    # Compute Final Metrics
     portfolio_return = float(mu_vec @ weights)
     portfolio_risk = float(np.sqrt(weights @ Sigma @ weights)) if n > 0 else 0
     sharpe_ratio = portfolio_return / portfolio_risk if portfolio_risk > 0 else 0
@@ -169,31 +147,23 @@ def optimize_nonconvex(mu, cov, tickers, lam=10, max_alloc=0.3, k=None):
     }
 
 
-# ---------------------- Main execution (Modified to save ONLY the Non-Convex plot) ----------------------
 if __name__ == '__main__':
-    # Set a seed for mock data reproducibility
     np.random.seed(42)
     
     mu, cov, tickers = load_data()
     n_assets = len(tickers)
 
-    # 1. CREATE INITIAL DATASET (no plotting)
     asset_index = np.arange(n_assets)
-    # Scale mu for better visualization range (x1000)
     mean_returns_scaled = mu.loc[tickers].values * 1000 
     initial_dataset = np.column_stack((asset_index, mean_returns_scaled))
 
-    # 2. APPLY NON-CONVEX FUNCTION AND PLOT CHANGE (This is the only plot step)
     print("\nSTEP 1: Modifying Dataset to Non-Convex and Plotting...")
     
-    # Apply the distortion, using a strength relative to the max return value
-    # to ensure the non-convexity is visually obvious.
     nonconvex_data = make_nonconvex(
         initial_dataset.copy(), 
         strength=np.max(mean_returns_scaled) / 2
     ) 
     
-    # Plot the non-convex state and save it
     plot_dataset_with_hull(
         data=nonconvex_data, 
         title_suffix="Modified (Non-Convex) Dataset",
@@ -202,7 +172,6 @@ if __name__ == '__main__':
     )
     # 
 
-    # 3. RUN THE OPTIMIZATION
     print("\nSTEP 2: Running Non-Convex Portfolio Optimization...")
     weights, obj_val, info = optimize_nonconvex(mu, cov, tickers, lam=10, max_alloc=0.3, k=5)
 
