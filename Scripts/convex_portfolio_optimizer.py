@@ -15,8 +15,6 @@ def load_data():
 def analyze_convexity(Sigma, mu_vec, lam):
 
     # 1. Second Derivative Check (Hessian = 2*Sigma)
-    # The objective function is convex if its Hessian (which is 2*Sigma) is Positive Semi-Definite (PSD).
-    # This is true if all eigenvalues of the Hessian (and thus Sigma) are non-negative.
     eigenvalues = np.linalg.eigvalsh(Sigma)
     min_eigenvalue = float(np.min(eigenvalues))
     is_psd = min_eigenvalue >= -1e-10
@@ -40,16 +38,13 @@ def plot_convex_hull(data_df, plot_path="Results/plots/dataset_convex_hull.png")
         print("[SKIP] Cannot plot convex hull: Data has less than 2 dimensions.")
         return
     
-    # Check if the required columns exist
     if 'return' not in data_df.columns or 'risk' not in data_df.columns:
         print("[SKIP] Cannot plot convex hull: Required 'return' and 'risk' columns not found.")
         print("Note: This function expects a DataFrame of individual stock metrics (return/risk).")
         return
 
-    # Convert the required columns to a NumPy array for ConvexHull
     points = data_df[['risk', 'return']].values
 
-    # Compute the convex hull
     hull = ConvexHull(points)
 
     plt.figure(figsize=(10, 8))
@@ -75,12 +70,10 @@ def plot_convex_hull(data_df, plot_path="Results/plots/dataset_convex_hull.png")
 
 
 def plot_objective_function(Sigma, mu_vec, lam, plot_path="Results/plots/objective_function_convexity.png"):
-
     n = len(mu_vec)
     if n < 2:
         print("[SKIP] Cannot plot objective function: Need at least 2 assets.")
         return
-
 
     # Use only the first two assets
     Sigma_2 = Sigma[:2, :2]
@@ -94,7 +87,6 @@ def plot_objective_function(Sigma, mu_vec, lam, plot_path="Results/plots/objecti
     for x1 in x1_range:
         x2 = 1.0 - x1
         x = np.array([x1, x2])
-        # Objective: x^T * Sigma * x - lam * mu^T * x
         risk_term = x.T @ Sigma_2 @ x
         return_term = lam * (mu_vec_2 @ x)
         obj = risk_term - return_term
@@ -124,11 +116,8 @@ def optimize_portfolio(mu, cov, tickers, lam=10, max_alloc=0.3):
     convexity = analyze_convexity(Sigma, mu_vec, lam)
 
     # 2. CVXPY Optimization (Problem + Objective + Constraints)
-    # Define variables
     x = cp.Variable(n)
     
-    # Objective function (DCP compliant)
-    # This minimizes the risk-adjusted return (Risk - lambda*Return)
     objective = cp.Minimize(cp.quad_form(x, Sigma) - lam * (mu_vec @ x))
     
     constraints = [
@@ -137,7 +126,6 @@ def optimize_portfolio(mu, cov, tickers, lam=10, max_alloc=0.3):
         x <= max_alloc
     ]
 
-    # Form the CVXPY problem
     problem = cp.Problem(objective, constraints)
     problem.solve(solver=cp.OSQP, verbose=False)
 
@@ -157,7 +145,6 @@ def optimize_portfolio(mu, cov, tickers, lam=10, max_alloc=0.3):
         "convexity": convexity,
     }
 
-# ---------------------- MAIN EXECUTION ----------------------
 if __name__ == "__main__":
     mu, cov, tickers = load_data()
     weights, obj_val, info = optimize_portfolio(mu, cov, tickers)
